@@ -40,7 +40,9 @@ POPULAR_GAMES = [
     3647333358,   # Evade (36k)
     88070565,     # Welcome to Bloxburg (35k)
     1176784616,   # Tower Defense Simulator (31k)
+    1831550657,   # Creatures of Sonaria (30k)
     4777817887,   # Blade Ball (29k)
+    372226183,    # Flee the Facility (28k)
     210851291,    # Build A Boat For Treasure (28k)
     65241,        # Natural Disaster Survival (25k)
     321778215,    # Royale High (25k)
@@ -49,27 +51,34 @@ POPULAR_GAMES = [
     245662005,    # Jailbreak (18k)
 
     # ===== TIER 3: Medium CCU (5k-20k) =====
+    47545,        # Work at a Pizza Place (10k)
+    31970568,     # Theme Park Tycoon 2 (8k)
     1451439645,   # King Legacy (6k)
     1008451066,   # Da Hood (6k)
+    4778845442,   # Toilet Tower Defense (4k)
     113491250,    # Phantom Forces (4k)
     703124385,    # Tower of Hell
     1516533665,   # Piggy
 
     # ===== TIER 4: Low CCU (1k-5k) =====
+    2404080894,   # Funky Friday (2.6k)
     2471084,      # Lumber Tycoon 2 (2.5k)
     115797356,    # Counter Blox (2.3k)
     873703865,    # Westbound (2k)
+    83858907,     # Speed Run 4 (1.8k)
     1335695570,   # Ninja Legends (2k)
     1659645941,   # Islands (1.7k)
     3264581003,   # Eternal Towers of Hell (1.7k)
     1111698561,   # T-Titans Battlegrounds (1.6k)
     2316994223,   # Pet Simulator X (1.5k)
     1247975681,   # BIG Paintball (1.3k)
+    140239261,    # MeepCity (1k)
     848145103,    # Dungeon Quest (1k)
 
     # ===== TIER 5: Micro CCU (<1k) but Notable =====
     3634139746,   # Hood Customs (850)
     1168263273,   # Bad Business FPS (400)
+    5836869368,   # Anime Defenders (250)
     174268353,    # The Streets (50+)
     1406616510,   # Rumble Quest (20+)
 ]
