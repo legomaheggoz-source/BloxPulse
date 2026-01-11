@@ -1,0 +1,220 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   Aurora Solar Light Theme - Global Styles
+   ============================================================================ */
+
+@layer base {
+  :root {
+    /* Aurora Color Variables */
+    --aurora-gold: #FFD700;
+    --aurora-cyan: #00CED1;
+    --aurora-purple: #9370DB;
+    --aurora-orange: #FFA500;
+    --aurora-pink: #FF69B4;
+    --aurora-white: #F8F9FB;
+    --aurora-light: #E0F7FF;
+    --aurora-deep-blue: #001a4d;
+    --aurora-green: #4DBD33;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 215, 0, 0.03) 0%,
+      rgba(0, 206, 209, 0.03) 50%,
+      rgba(147, 112, 219, 0.03) 100%
+    );
+    min-height: 100vh;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--aurora-light);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--aurora-cyan);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--aurora-purple);
+  }
+}
+
+@layer components {
+  /* Glassmorphism Panel */
+  .glass-panel {
+    @apply relative overflow-hidden;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 206, 209, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 206, 209, 0.1);
+  }
+
+  /* Aurora Gradient Glass */
+  .glass-aurora {
+    @apply relative overflow-hidden;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 215, 0, 0.12) 0%,
+      rgba(0, 206, 209, 0.12) 50%,
+      rgba(147, 112, 219, 0.12) 100%
+    );
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 206, 209, 0.25);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 206, 209, 0.15);
+  }
+
+  /* Aurora Button */
+  .btn-aurora {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+    background: linear-gradient(135deg, var(--aurora-gold) 0%, var(--aurora-cyan) 100%);
+    color: var(--aurora-deep-blue);
+    box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+  }
+
+  .btn-aurora:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+  }
+
+  .btn-aurora:active {
+    transform: translateY(0);
+  }
+
+  /* Secondary Button */
+  .btn-secondary {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+    background: rgba(0, 206, 209, 0.1);
+    color: var(--aurora-deep-blue);
+    border: 1px solid rgba(0, 206, 209, 0.3);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(0, 206, 209, 0.2);
+    border-color: var(--aurora-cyan);
+  }
+
+  /* Aurora Glow Effect */
+  .aurora-glow {
+    position: relative;
+  }
+
+  .aurora-glow::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, var(--aurora-gold), var(--aurora-cyan), var(--aurora-purple));
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .aurora-glow:hover::before {
+    opacity: 0.5;
+    filter: blur(8px);
+  }
+
+  /* Stat Card */
+  .stat-card {
+    @apply glass-panel p-4;
+  }
+
+  .stat-card .stat-value {
+    @apply text-2xl font-bold;
+    background: linear-gradient(135deg, var(--aurora-gold), var(--aurora-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-card .stat-label {
+    @apply text-sm text-aurora-deep-blue/70 mt-1;
+  }
+
+  /* Trend Badge */
+  .badge-trending {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(0, 206, 209, 0.2));
+    color: var(--aurora-deep-blue);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+  }
+
+  .badge-genre {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+    background: rgba(147, 112, 219, 0.15);
+    color: var(--aurora-purple);
+    border: 1px solid rgba(147, 112, 219, 0.3);
+  }
+}
+
+@layer utilities {
+  /* Text gradient */
+  .text-aurora-gradient {
+    background: linear-gradient(135deg, var(--aurora-gold), var(--aurora-cyan), var(--aurora-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Animated aurora background */
+  .bg-aurora-animated {
+    background: linear-gradient(135deg, var(--aurora-gold), var(--aurora-cyan), var(--aurora-purple));
+    background-size: 200% 200%;
+    animation: aurora-flow 8s ease-in-out infinite;
+  }
+
+  @keyframes aurora-flow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* Focus ring */
+  .focus-aurora {
+    @apply outline-none ring-2 ring-aurora-cyan ring-offset-2 ring-offset-background;
+  }
+}
+
+/* ============================================================================
+   Recharts Custom Styling
+   ============================================================================ */
+
+.recharts-cartesian-axis-tick-value {
+  fill: var(--aurora-deep-blue);
+  font-size: 12px;
+}
+
+.recharts-legend-item-text {
+  color: var(--aurora-deep-blue) !important;
+}
+
+.recharts-tooltip-wrapper {
+  outline: none;
+}
+
+.recharts-default-tooltip {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(0, 206, 209, 0.3) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0, 206, 209, 0.15) !important;
+}

@@ -1,0 +1,38 @@
+# BloxPulse Docker Compose
+# For local development and testing
+
+version: '3.8'
+
+services:
+  bloxpulse:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bloxpulse
+    ports:
+      - "7860:7860"
+    environment:
+      - ENVIRONMENT=development
+      - API_HOST=0.0.0.0
+      - API_PORT=7860
+      - DATABASE_URL=sqlite+aiosqlite:///./bloxpulse.db
+      - LOG_LEVEL=INFO
+      - COLLECTION_INTERVAL_HOURS=6
+      # Add your API keys here for testing
+      # - HF_TOKEN=your_token
+      # - YOUTUBE_API_KEY=your_key
+      # - TWITTER_BEARER_TOKEN=your_token
+    volumes:
+      # Persist database in development
+      - bloxpulse-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  bloxpulse-data:
+    driver: local
