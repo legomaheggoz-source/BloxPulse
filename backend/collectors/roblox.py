@@ -71,14 +71,18 @@ class RobloxCollector:
 
     def __init__(self):
         self.client: Optional[httpx.AsyncClient] = None
+        self.last_error: Optional[str] = None
 
     async def __aenter__(self):
+        # Use a standard browser User-Agent to avoid blocking
         self.client = httpx.AsyncClient(
             timeout=30.0,
             headers={
-                "User-Agent": "BloxPulse/1.0 (Market Research Tool)",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                 "Accept": "application/json",
+                "Accept-Language": "en-US,en;q=0.9",
             },
+            follow_redirects=True,
         )
         return self
 
@@ -92,13 +96,18 @@ class RobloxCollector:
 
         try:
             response = await self.client.get(url, params=params)
+            print(f"Request to {url}: status={response.status_code}")
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            print(f"Response data keys: {list(data.keys()) if isinstance(data, dict) else 'not dict'}")
+            return data
         except httpx.HTTPStatusError as e:
-            print(f"HTTP Error {e.response.status_code}: {url}")
+            self.last_error = f"HTTP Error {e.response.status_code}: {url} - {e.response.text[:200]}"
+            print(self.last_error)
             return {}
         except Exception as e:
-            print(f"Request error: {e}")
+            self.last_error = f"Request error for {url}: {str(e)}"
+            print(self.last_error)
             return {}
 
     async def get_game_details(self, universe_ids: list[int]) -> list[dict]:
@@ -162,8 +171,10 @@ class RobloxCollector:
 
             if not details:
                 log.status = "failed"
-                log.error_message = "No game details returned from API"
+                error_msg = f"No game details returned from API. Last error: {self.last_error}"
+                log.error_message = error_msg
                 log.completed_at = datetime.utcnow()
+                print(error_msg)
                 return 0
 
             # Get thumbnails
