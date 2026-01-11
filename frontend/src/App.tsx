@@ -1,13 +1,19 @@
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Header } from './components/Header'
 import { Dashboard } from './components/Dashboard'
+import { Analytics } from './components/Analytics'
 import { StatsBar } from './components/StatsBar'
 
+export type TabType = 'trends' | 'analytics'
+
 function App() {
+  const [activeTab, setActiveTab] = useState<TabType>('trends')
+
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <Header />
+      <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
@@ -19,8 +25,30 @@ function App() {
           {/* Stats Overview */}
           <StatsBar />
 
-          {/* Dashboard */}
-          <Dashboard />
+          {/* Tab Content */}
+          <AnimatePresence mode="wait">
+            {activeTab === 'trends' ? (
+              <motion.div
+                key="trends"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Dashboard />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="analytics"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Analytics />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </main>
 

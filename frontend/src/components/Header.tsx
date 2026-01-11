@@ -1,7 +1,13 @@
 import { motion } from 'framer-motion'
 import { Activity, TrendingUp, Zap } from 'lucide-react'
+import type { TabType } from '../App'
 
-export function Header() {
+interface HeaderProps {
+  activeTab: TabType
+  onTabChange: (tab: TabType) => void
+}
+
+export function Header({ activeTab, onTabChange }: HeaderProps) {
   return (
     <header className="glass-panel mx-4 mt-4 mb-6">
       <div className="container mx-auto px-6 py-4">
@@ -31,13 +37,23 @@ export function Header() {
 
           {/* Navigation */}
           <motion.nav
-            className="hidden md:flex items-center gap-6"
+            className="hidden md:flex items-center gap-2"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <NavLink icon={<TrendingUp className="w-4 h-4" />} label="Trends" active />
-            <NavLink icon={<Activity className="w-4 h-4" />} label="Analytics" comingSoon />
+            <NavLink
+              icon={<TrendingUp className="w-4 h-4" />}
+              label="Trends"
+              active={activeTab === 'trends'}
+              onClick={() => onTabChange('trends')}
+            />
+            <NavLink
+              icon={<Activity className="w-4 h-4" />}
+              label="Analytics"
+              active={activeTab === 'analytics'}
+              onClick={() => onTabChange('analytics')}
+            />
           </motion.nav>
 
           {/* Status */}
@@ -62,30 +78,24 @@ function NavLink({
   icon,
   label,
   active = false,
-  comingSoon = false,
+  onClick,
 }: {
   icon: React.ReactNode
   label: string
   active?: boolean
-  comingSoon?: boolean
+  onClick?: () => void
 }) {
   return (
     <button
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 relative ${
+      onClick={onClick}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
         active
-          ? 'bg-aurora-cyan/20 text-aurora-deep-blue font-medium'
+          ? 'bg-aurora-gradient text-aurora-deep-blue font-medium shadow-sm'
           : 'text-aurora-deep-blue/60 hover:text-aurora-deep-blue hover:bg-aurora-cyan/10'
-      } ${comingSoon ? 'cursor-not-allowed opacity-60' : ''}`}
-      disabled={comingSoon}
-      title={comingSoon ? 'Coming Soon' : undefined}
+      }`}
     >
       {icon}
       <span>{label}</span>
-      {comingSoon && (
-        <span className="absolute -top-1 -right-1 text-[10px] bg-aurora-purple text-white px-1.5 py-0.5 rounded-full">
-          Soon
-        </span>
-      )}
     </button>
   )
 }
