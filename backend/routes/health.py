@@ -54,3 +54,42 @@ async def health_check(session: AsyncSession = Depends(get_session)):
 async def ping():
     """Simple ping endpoint for uptime monitoring."""
     return {"ping": "pong", "timestamp": datetime.utcnow().isoformat()}
+
+
+@router.get("/logs")
+async def collection_logs(
+    limit: int = 10,
+    session: AsyncSession = Depends(get_session),
+):
+    """Get recent collection logs for debugging."""
+    from sqlalchemy import select, desc
+    from database import CollectionLog, Game
+
+    # Get recent collection logs
+    logs_result = await session.execute(
+        select(CollectionLog)
+        .order_by(desc(CollectionLog.started_at))
+        .limit(limit)
+    )
+    logs = logs_result.scalars().all()
+
+    # Get game count
+    from sqlalchemy import func
+    count_result = await session.execute(select(func.count(Game.id)))
+    game_count = count_result.scalar() or 0
+
+    return {
+        "game_count": game_count,
+        "logs": [
+            {
+                "id": log.id,
+                "collector": log.collector_name,
+                "status": log.status,
+                "items": log.items_collected,
+                "error": log.error_message,
+                "started": log.started_at.isoformat() if log.started_at else None,
+                "completed": log.completed_at.isoformat() if log.completed_at else None,
+            }
+            for log in logs
+        ]
+    }
