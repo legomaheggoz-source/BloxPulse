@@ -9,10 +9,10 @@ FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 
 # Copy package files
-COPY frontend/package*.json ./
+COPY frontend/package.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy frontend source
 COPY frontend/ ./
