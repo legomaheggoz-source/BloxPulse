@@ -122,6 +122,27 @@ async def manual_collect():
     return {"status": "collection triggered"}
 
 
+# Refresh endpoint - triggers collection and returns status
+@app.post("/api/v1/admin/refresh", tags=["Admin"])
+async def refresh_data():
+    """
+    Refresh game data from Roblox API.
+
+    This uses the current game list and fetches the latest CCU/stats.
+    For discovering NEW games, use the GitHub Actions workflow.
+    """
+    from collectors.roblox import POPULAR_GAMES
+
+    await trigger_collection()
+
+    return {
+        "status": "success",
+        "message": "Data refresh triggered",
+        "games_in_list": len(POPULAR_GAMES),
+        "note": "New game discovery runs weekly via GitHub Actions"
+    }
+
+
 # Manual sync trigger
 @app.post("/api/v1/admin/sync", tags=["Admin"])
 async def manual_sync():

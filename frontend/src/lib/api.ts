@@ -159,3 +159,17 @@ export async function getHealth(): Promise<HealthResponse> {
 export async function triggerCollection(): Promise<{ status: string }> {
   return fetchApi<{ status: string }>('/admin/collect', { method: 'POST' })
 }
+
+/**
+ * Refresh data - triggers collection with status
+ */
+export interface RefreshResponse {
+  status: string
+  message: string
+  games_in_list: number
+  note: string
+}
+
+export async function refreshData(): Promise<RefreshResponse> {
+  return fetchApi<RefreshResponse>('/admin/refresh', { method: 'POST' })
+}
