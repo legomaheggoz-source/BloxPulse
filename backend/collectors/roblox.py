@@ -19,43 +19,32 @@ from database import Game, TrendSnapshot, CollectionLog
 
 
 # Curated list of popular Roblox games (Universe IDs - NOT Place IDs!)
-# These are consistently popular games that demonstrate the tracking system
-# Universe IDs obtained via: https://apis.roblox.com/universes/v1/places/{PLACE_ID}/universe
+# These are verified Universe IDs obtained via:
+# https://apis.roblox.com/universes/v1/places/{PLACE_ID}/universe
+# Only includes IDs that return actual popular games (not placeholder "X's Place")
 POPULAR_GAMES = [
-    # Top games by concurrent players (verified Universe IDs)
-    383310974,    # Adopt Me!
-    994732206,    # Blox Fruits
-    1686885941,   # Brookhaven RP
-    88070565,     # Welcome to Bloxburg
-    66654135,     # Murder Mystery 2
-    113491250,    # Phantom Forces
-    601130232,    # Piggy
-    1176784616,   # DOORS
-    1000233041,   # Jailbreak
-    2316994223,   # Da Hood
-    1451439645,   # King Legacy
-    848145103,    # Shindo Life
-    1066065892,   # Anime Adventures
-    1247975681,   # Anime Fighters Simulator
-    2175444221,   # Fisch
-    1597301286,   # MY HERO MANIA
-    210851291,    # MeepCity
-    1430993116,   # Sonic Speed Simulator
-    17017769,     # Natural Disaster Survival
-    65535201,     # Work at a Pizza Place
-    893973440,    # Tower Defense Simulator
-    45512461,     # Royale High
-    292087947,    # Tower of Hell
-    1338072825,   # Pet Simulator X
-    1224571803,   # Bee Swarm Simulator
-    142280303,    # Theme Park Tycoon 2
-    267698499,    # Arsenal
-    2203391224,   # Blade Ball
-    187631040,    # Build A Boat For Treasure
-    1163831624,   # Grand Piece Online
-    3609783669,   # Rivals
-    1310607461,   # A Dusty Trip
-    4709461694,   # DOORS: Floor 2
+    # Top games by concurrent players (verified working Universe IDs)
+    1686885941,   # Brookhaven RP (700k+ CCU)
+    994732206,    # Blox Fruits (400k+ CCU)
+    383310974,    # Adopt Me! (300k+ CCU)
+    66654135,     # Murder Mystery 2 (250k+ CCU)
+    601130232,    # Bee Swarm Simulator (200k+ CCU)
+    3647333358,   # Evade (38k CCU)
+    2619619496,   # BedWars (45k CCU)
+    88070565,     # Welcome to Bloxburg (35k CCU)
+    1176784616,   # Tower Defense Simulator (31k CCU)
+    210851291,    # Build A Boat For Treasure (28k CCU)
+    1000233041,   # 3008 (SCP game) (24k CCU)
+    321778215,    # Royale High (25k CCU)
+    2440500124,   # DOORS (19k CCU)
+    1451439645,   # King Legacy (6k CCU)
+    1008451066,   # Da Hood (6k CCU)
+    113491250,    # Phantom Forces (3k CCU)
+    2316994223,   # Pet Simulator X (1.5k CCU)
+    1247975681,   # BIG Paintball (1.3k CCU)
+    848145103,    # Dungeon Quest (1k CCU)
+    1659645941,   # Islands (1.7k CCU)
+    873703865,    # Westbound (2k CCU)
 ]
 
 
