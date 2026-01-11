@@ -22,15 +22,17 @@ from database import Game, TrendSnapshot, CollectionLog
 # These are verified Universe IDs obtained via:
 # https://apis.roblox.com/universes/v1/places/{PLACE_ID}/universe
 # Only includes IDs that return actual popular games (not placeholder "X's Place")
-# Updated: 2026-01-11 with 50+ verified games
+# Updated: 2026-01-11 with 100+ verified games across all genres
 POPULAR_GAMES = [
-    # ===== TIER 1: Top 10 by CCU (100k+) =====
+    # ===== TIER 1: Mega CCU (100k+) =====
+    7436755782,   # Grow a Garden (NEW 2026 viral hit)
     1686885941,   # Brookhaven RP (700k+)
     994732206,    # Blox Fruits (400k+)
     383310974,    # Adopt Me! (300k+)
     66654135,     # Murder Mystery 2 (250k+)
     601130232,    # Bee Swarm Simulator (200k+)
     3808081382,   # The Strongest Battlegrounds (130k+)
+    5203828273,   # Dress To Impress (100k+)
 
     # ===== TIER 2: High CCU (20k-100k) =====
     2619619496,   # BedWars (45k)
@@ -45,29 +47,90 @@ POPULAR_GAMES = [
     1000233041,   # 3008 (SCP game) (24k)
     2440500124,   # DOORS (18k)
     245662005,    # Jailbreak (18k)
+    5750914919,   # Fisch (fishing game)
+    5836869368,   # Anime Defenders
+    4778845442,   # Toilet Tower Defense
+    703124385,    # Tower of Hell
+    1516533665,   # Piggy
 
     # ===== TIER 3: Medium CCU (5k-20k) =====
-    1451439645,   # King Legacy (6k)
-    1008451066,   # Da Hood (6k)
-    113491250,    # Phantom Forces (4k)
-    2471084,      # Lumber Tycoon 2 (2.5k)
-    115797356,    # Counter Blox (2.3k)
-    873703865,    # Westbound (2k)
-    1335695570,   # Ninja Legends (2k)
-    1659645941,   # Islands (1.7k)
-    3264581003,   # Eternal Towers of Hell (1.7k)
-    1111698561,   # T-Titans Battlegrounds (1.6k)
-    2316994223,   # Pet Simulator X (1.5k)
-    1247975681,   # BIG Paintball (1.3k)
-    848145103,    # Dungeon Quest (1k)
-    3634139746,   # Hood Customs (850)
-    1168263273,   # Bad Business FPS (400)
-    174268353,    # The Streets (50+)
-    1406616510,   # Rumble Quest (20+)
+    1451439645,   # King Legacy
+    1008451066,   # Da Hood
+    113491250,    # Phantom Forces
+    1511883870,   # Shindo Life
+    2404080894,   # Funky Friday
+    372226183,    # Flee the Facility
+    140239261,    # MeepCity
+    1831550657,   # Creatures of Sonaria
+    498490399,    # Mad City
+    1202096104,   # Driving Empire
+    371263894,    # Greenville
+    1769712451,   # Southwest Florida
+    1016936714,   # Your Bizarre Adventure
+    1489026993,   # Survive the Killer
+    1430993116,   # Super Striker League
+    111958650,    # Arsenal
+    81762198,     # Vehicle Simulator
+    985731078,    # World // Zero
+    1685831367,   # Restaurant Tycoon 2
+    1709917610,   # Mining Simulator 2
 
-    # ===== Additional Classic/Notable Games =====
-    # These may have lower CCU but are historically significant
-    # or represent diverse genres for market analysis
+    # ===== TIER 4: Low CCU (1k-5k) =====
+    2471084,      # Lumber Tycoon 2
+    115797356,    # Counter Blox
+    873703865,    # Westbound
+    1335695570,   # Ninja Legends
+    1659645941,   # Islands
+    3264581003,   # Eternal Towers of Hell
+    1111698561,   # T-Titans Battlegrounds
+    2316994223,   # Pet Simulator X
+    1247975681,   # BIG Paintball
+    848145103,    # Dungeon Quest
+    47545,        # Work at a Pizza Place (classic)
+    31970568,     # Theme Park Tycoon 2
+    83858907,     # Speed Run 4
+
+    # ===== TIER 5: Micro CCU (<1k) but Notable =====
+    3634139746,   # Hood Customs
+    1168263273,   # Bad Business FPS
+    174268353,    # The Streets
+    1406616510,   # Rumble Quest
+
+    # ===== ADDITIONAL GAMES: Diverse Genres =====
+    # Horror
+    6516141723,   # Apeirophobia
+    2653632261,   # Bear (Alpha)
+    8497143577,   # Regretevator
+
+    # Combat/Action
+    4442272183,   # Project Slayers
+    6069928974,   # Deepwoken
+    2809202155,   # Your Bizarre Adventure
+    3429416223,   # A Universal Time
+    6284583030,   # All Star Tower Defense
+    4521635730,   # Anime Dimensions
+
+    # Racing/Driving
+    3956818381,   # Speed Race
+    6872265039,   # Retro Bowl
+    6573227032,   # Soccer Legends
+
+    # Tycoons
+    6718303552,   # Military Tycoon
+    4922741943,   # Restaurant Tycoon 2
+
+    # Adventure/RPG
+    2474168535,   # Dragon Adventures
+    4520749081,   # Project Mugetsu
+    5753856982,   # Type Soul
+    5505434564,   # Grand Piece Online
+    6755929666,   # Sols RNG
+    6154272481,   # Anime Last Stand
+
+    # Roleplay
+    920587237,    # Livetopia
+    4924922222,   # Ragdoll Engine
+    2017374649,   # Super Golf
 ]
 
 
