@@ -18,50 +18,44 @@ from sqlalchemy import select
 from database import Game, TrendSnapshot, CollectionLog
 
 
-# Curated list of popular Roblox games (Universe IDs)
+# Curated list of popular Roblox games (Universe IDs - NOT Place IDs!)
 # These are consistently popular games that demonstrate the tracking system
+# Universe IDs obtained via: https://apis.roblox.com/universes/v1/places/{PLACE_ID}/universe
 POPULAR_GAMES = [
-    # Top games by concurrent players (2024-2025)
-    286090429,    # Adopt Me!
-    2753915549,   # Blox Fruits
-    4252370517,   # Brookhaven RP
-    920587237,    # Royale High
-    2474168535,   # Tower of Hell
-    185655149,    # Welcome to Bloxburg
-    3260590327,   # Doors
-    6516141723,   # Rivals
-    142823291,    # Murder Mystery 2
-    1224212277,   # Murder Mystery S
-    2021178065,   # Ability Wars
-    65241,        # Natural Disaster Survival
-    189707,       # Jailbreak
-    292439477,    # Phantom Forces
-    1962086868,   # Tower Defense Simulator
-    13822889,     # Piggy
-    3956818381,   # Bee Swarm Simulator
-    4520749081,   # King Legacy
-    3233893879,   # A Dusty Trip
-    6284583030,   # Da Hood
-    4922409811,   # DOORS: Floor 2
-    5036207802,   # Pet Simulator X
-    3527629287,   # Anime Fighters Simulator
-    455366377,    # Dragon Ball Daima: Destiny
-    2414851778,   # Shindo Life
-    4991295695,   # My Restaurant
-    68133584,     # Meep City
-    2950983942,   # Anime Adventures
-    2512644273,   # OBBY BUT YOURE A BALL
-    3260917757,   # Grand Piece Online
-    5504587950,   # Build a Boat for Treasure
-    1600503495,   # MM2 Sandbox
-    2563455047,   # Sonic Speed Simulator
-    3407858589,   # Blade Ball
-    4872321990,   # Arm Wrestle Simulator
-    6018864097,   # Fisch
-    113108949,    # Work at a Pizza Place
-    4763704977,   # MY HERO MANIA
-    4669040,      # Theme Park Tycoon 2
-    478820088,    # Creatures of Sonaria
+    # Top games by concurrent players (verified Universe IDs)
+    383310974,    # Adopt Me!
+    994732206,    # Blox Fruits
+    1686885941,   # Brookhaven RP
+    88070565,     # Welcome to Bloxburg
+    66654135,     # Murder Mystery 2
+    113491250,    # Phantom Forces
+    601130232,    # Piggy
+    1176784616,   # DOORS
+    1000233041,   # Jailbreak
+    2316994223,   # Da Hood
+    1451439645,   # King Legacy
+    848145103,    # Shindo Life
+    1066065892,   # Anime Adventures
+    1247975681,   # Anime Fighters Simulator
+    2175444221,   # Fisch
+    1597301286,   # MY HERO MANIA
+    210851291,    # MeepCity
+    1430993116,   # Sonic Speed Simulator
+    17017769,     # Natural Disaster Survival
+    65535201,     # Work at a Pizza Place
+    893973440,    # Tower Defense Simulator
+    45512461,     # Royale High
+    292087947,    # Tower of Hell
+    1338072825,   # Pet Simulator X
+    1224571803,   # Bee Swarm Simulator
+    142280303,    # Theme Park Tycoon 2
+    267698499,    # Arsenal
+    2203391224,   # Blade Ball
+    187631040,    # Build A Boat For Treasure
+    1163831624,   # Grand Piece Online
+    3609783669,   # Rivals
+    1310607461,   # A Dusty Trip
+    4709461694,   # DOORS: Floor 2
 ]
 
 
