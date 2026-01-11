@@ -2,10 +2,9 @@
 Roblox API Collector
 
 Collects data from official Roblox APIs:
-- Trending games
-- Top earning games
-- Game details
-- Player counts
+- Popular games (curated list + discovered)
+- Game details and player counts
+- Thumbnails
 """
 
 import asyncio
@@ -19,16 +18,62 @@ from sqlalchemy import select
 from database import Game, TrendSnapshot, CollectionLog
 
 
+# Curated list of popular Roblox games (Universe IDs)
+# These are consistently popular games that demonstrate the tracking system
+POPULAR_GAMES = [
+    # Top games by concurrent players (2024-2025)
+    286090429,    # Adopt Me!
+    2753915549,   # Blox Fruits
+    4252370517,   # Brookhaven RP
+    920587237,    # Royale High
+    2474168535,   # Tower of Hell
+    185655149,    # Welcome to Bloxburg
+    3260590327,   # Doors
+    6516141723,   # Rivals
+    142823291,    # Murder Mystery 2
+    1224212277,   # Murder Mystery S
+    2021178065,   # Ability Wars
+    65241,        # Natural Disaster Survival
+    189707,       # Jailbreak
+    292439477,    # Phantom Forces
+    1962086868,   # Tower Defense Simulator
+    13822889,     # Piggy
+    3956818381,   # Bee Swarm Simulator
+    4520749081,   # King Legacy
+    3233893879,   # A Dusty Trip
+    6284583030,   # Da Hood
+    4922409811,   # DOORS: Floor 2
+    5036207802,   # Pet Simulator X
+    3527629287,   # Anime Fighters Simulator
+    455366377,    # Dragon Ball Daima: Destiny
+    2414851778,   # Shindo Life
+    4991295695,   # My Restaurant
+    68133584,     # Meep City
+    2950983942,   # Anime Adventures
+    2512644273,   # OBBY BUT YOURE A BALL
+    3260917757,   # Grand Piece Online
+    5504587950,   # Build a Boat for Treasure
+    1600503495,   # MM2 Sandbox
+    2563455047,   # Sonic Speed Simulator
+    3407858589,   # Blade Ball
+    4872321990,   # Arm Wrestle Simulator
+    6018864097,   # Fisch
+    113108949,    # Work at a Pizza Place
+    4763704977,   # MY HERO MANIA
+    4669040,      # Theme Park Tycoon 2
+    478820088,    # Creatures of Sonaria
+]
+
+
 class RobloxCollector:
     """Collector for Roblox official API data."""
 
     # API Endpoints
-    BASE_URL = "https://games.roblox.com"
-    CATALOG_URL = "https://catalog.roblox.com"
-    THUMBNAIL_URL = "https://thumbnails.roblox.com"
+    GAMES_API = "https://games.roblox.com"
+    THUMBNAIL_API = "https://thumbnails.roblox.com"
 
     # Rate limiting
-    REQUEST_DELAY = 0.5  # seconds between requests
+    REQUEST_DELAY = 0.3  # seconds between requests
 
     def __init__(self):
         self.client: Optional[httpx.AsyncClient] = None
@@ -51,82 +96,61 @@ class RobloxCollector:
         """Make a rate-limited request to the Roblox API."""
         await asyncio.sleep(self.REQUEST_DELAY)
 
-        response = await self.client.get(url, params=params)
-        response.raise_for_status()
-        return response.json()
-
-    async def get_games_list(
-        self,
-        sort_token: str = "HomeSorts",
-        genre_token: str = None,
-        limit: int = 50,
-    ) -> list[dict]:
-        """
-        Get list of games from Roblox discovery API.
-
-        Sort tokens:
-        - HomeSorts: Default home page sorts
-        - MostEngaging: Most engaging games
-        - TopEarning: Top earning games
-        - TopRated: Highest rated games
-        """
-        url = f"{self.BASE_URL}/v1/games/list"
-        params = {
-            "sortToken": sort_token,
-            "limit": limit,
-        }
-        if genre_token:
-            params["genreToken"] = genre_token
-
         try:
-            data = await self._request(url, params)
-            return data.get("games", [])
+            response = await self.client.get(url, params=params)
+            response.raise_for_status()
+            return response.json()
         except httpx.HTTPStatusError as e:
-            print(f"Error fetching games list: {e}")
-            return []
+            print(f"HTTP Error {e.response.status_code}: {url}")
+            return {}
+        except Exception as e:
+            print(f"Request error: {e}")
+            return {}
 
     async def get_game_details(self, universe_ids: list[int]) -> list[dict]:
         """Get detailed information for multiple games."""
         if not universe_ids:
             return []
 
-        url = f"{self.BASE_URL}/v1/games"
-        params = {"universeIds": ",".join(map(str, universe_ids[:100]))}  # Max 100
+        # API accepts max 100 IDs at a time
+        all_games = []
+        for i in range(0, len(universe_ids), 100):
+            batch = universe_ids[i:i + 100]
+            url = f"{self.GAMES_API}/v1/games"
+            params = {"universeIds": ",".join(map(str, batch))}
 
-        try:
             data = await self._request(url, params)
-            return data.get("data", [])
-        except httpx.HTTPStatusError as e:
-            print(f"Error fetching game details: {e}")
-            return []
+            games = data.get("data", [])
+            all_games.extend(games)
+
+        return all_games
 
     async def get_game_icons(self, universe_ids: list[int], size: str = "150x150") -> dict:
         """Get game thumbnail icons."""
         if not universe_ids:
             return {}
 
-        url = f"{self.THUMBNAIL_URL}/v1/games/icons"
-        params = {
-            "universeIds": ",".join(map(str, universe_ids[:100])),
-            "size": size,
-            "format": "Png",
-            "isCircular": "false",
-        }
-
-        try:
-            data = await self._request(url, params)
-            return {
-                item["targetId"]: item.get("imageUrl")
-                for item in data.get("data", [])
-                if item.get("state") == "Completed"
+        icons = {}
+        for i in range(0, len(universe_ids), 100):
+            batch = universe_ids[i:i + 100]
+            url = f"{self.THUMBNAIL_API}/v1/games/icons"
+            params = {
+                "universeIds": ",".join(map(str, batch)),
+                "size": size,
+                "format": "Png",
+                "isCircular": "false",
             }
-        except httpx.HTTPStatusError as e:
-            print(f"Error fetching game icons: {e}")
-            return {}
+
+            data = await self._request(url, params)
+            for item in data.get("data", []):
+                if item.get("state") == "Completed":
+                    icons[item["targetId"]] = item.get("imageUrl")
+
+        return icons
 
     async def collect_trending_games(self, session: AsyncSession) -> int:
         """
-        Collect trending games and save to database.
+        Collect game data and save to database.
 
         Returns number of games collected.
         """
@@ -135,41 +159,34 @@ class RobloxCollector:
         await session.flush()
 
         try:
-            # Get trending/popular games from multiple sources
-            games_data = []
+            # Use curated list of popular games
+            universe_ids = POPULAR_GAMES.copy()
 
-            # Most engaging games
-            engaging = await self.get_games_list(sort_token="MostEngaging", limit=50)
-            for i, game in enumerate(engaging):
-                game["_trending_rank"] = i + 1
-            games_data.extend(engaging)
+            # Get detailed information
+            print(f"Fetching details for {len(universe_ids)} games...")
+            details = await self.get_game_details(universe_ids)
 
-            # Get unique universe IDs
-            universe_ids = list({g.get("universeId") for g in games_data if g.get("universeId")})
-
-            if not universe_ids:
+            if not details:
                 log.status = "failed"
-                log.error_message = "No games found"
+                log.error_message = "No game details returned from API"
                 log.completed_at = datetime.utcnow()
                 return 0
 
-            # Get detailed information
-            details = await self.get_game_details(universe_ids)
-            details_map = {d["id"]: d for d in details}
-
             # Get thumbnails
+            print(f"Fetching thumbnails...")
             icons = await self.get_game_icons(universe_ids)
+
+            # Sort by current players (descending) to determine rank
+            details_sorted = sorted(details, key=lambda x: x.get("playing", 0), reverse=True)
 
             # Process and save games
             count = 0
             snapshot_time = datetime.utcnow()
 
-            for game_data in games_data:
-                universe_id = game_data.get("universeId")
+            for rank, detail in enumerate(details_sorted, 1):
+                universe_id = detail.get("id")
                 if not universe_id:
                     continue
-
-                detail = details_map.get(universe_id, {})
 
                 # Upsert game record
                 existing = await session.execute(
@@ -182,10 +199,13 @@ class RobloxCollector:
                     session.add(game)
 
                 # Update game data
-                game.name = detail.get("name") or game_data.get("name", "Unknown")
-                game.description = detail.get("description", "")
-                game.creator_name = detail.get("creator", {}).get("name")
-                game.creator_id = detail.get("creator", {}).get("id")
+                game.name = detail.get("name", "Unknown")
+                game.description = detail.get("description", "")[:2000] if detail.get("description") else None
+
+                creator = detail.get("creator", {})
+                game.creator_name = creator.get("name")
+                game.creator_id = creator.get("id")
+
                 game.playing = detail.get("playing", 0)
                 game.visits = detail.get("visits", 0)
                 game.favorites = detail.get("favoritedCount", 0)
@@ -199,7 +219,7 @@ class RobloxCollector:
                     playing=game.playing,
                     visits=game.visits,
                     favorites=game.favorites,
-                    trending_rank=game_data.get("_trending_rank"),
+                    trending_rank=rank,
                     snapshot_at=snapshot_time,
                 )
                 session.add(snapshot)
@@ -210,12 +230,14 @@ class RobloxCollector:
             log.items_collected = count
             log.completed_at = datetime.utcnow()
 
+            print(f"Successfully collected {count} games")
             return count
 
         except Exception as e:
             log.status = "failed"
             log.error_message = str(e)
             log.completed_at = datetime.utcnow()
+            print(f"Collection failed: {e}")
             raise
 
 
