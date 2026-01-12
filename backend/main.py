@@ -127,121 +127,15 @@ async def manual_collect():
 # GET version for easy browser testing
 @app.get("/api/v1/admin/collect", tags=["Admin"])
 async def manual_collect_get():
-    """Manually trigger data collection with detailed debugging."""
-    import traceback
-    from collectors.roblox import POPULAR_GAMES, RobloxCollector
-    from database import async_session_maker, Game, TrendSnapshot, CollectionLog
-    from sqlalchemy import select, func
-    from datetime import datetime
+    """Manually trigger data collection (GET version for browser testing)."""
+    from collectors.roblox import POPULAR_GAMES
 
-    debug_info = {"steps": []}
+    await trigger_collection()
 
-    try:
-        async with async_session_maker() as session:
-            debug_info["steps"].append("Session opened")
-
-            # Check current count
-            result = await session.execute(select(func.count(Game.id)))
-            before_count = result.scalar() or 0
-            debug_info["steps"].append(f"Before count: {before_count}")
-
-            # Run collection manually with debugging
-            async with RobloxCollector() as collector:
-                debug_info["steps"].append("Collector initialized")
-
-                # Fetch game details
-                universe_ids = POPULAR_GAMES.copy()
-                debug_info["steps"].append(f"Fetching {len(universe_ids)} games")
-
-                details = await collector.get_game_details(universe_ids)
-                debug_info["steps"].append(f"Got {len(details)} game details")
-                debug_info["last_error"] = collector.last_error
-
-                if not details:
-                    return {
-                        "status": "no_data",
-                        "debug": debug_info,
-                        "games_in_list": len(POPULAR_GAMES),
-                    }
-
-                # Save games
-                count = 0
-                for detail in details[:10]:  # Just first 10 for debug
-                    universe_id = detail.get("id")
-                    if not universe_id:
-                        continue
-
-                    existing = await session.execute(
-                        select(Game).where(Game.id == universe_id)
-                    )
-                    game = existing.scalar_one_or_none()
-
-                    if game is None:
-                        game = Game(id=universe_id)
-                        session.add(game)
-
-                    game.name = detail.get("name", "Unknown")
-                    game.playing = detail.get("playing", 0)
-                    game.visits = detail.get("visits", 0)
-                    game.favorites = detail.get("favoritedCount", 0)
-                    game.genre = detail.get("genre")
-                    game.updated_at = datetime.utcnow()
-                    count += 1
-
-                debug_info["steps"].append(f"Processed {count} games")
-
-                await session.commit()
-                debug_info["steps"].append("Committed")
-
-            # Check new count
-            result = await session.execute(select(func.count(Game.id)))
-            after_count = result.scalar() or 0
-            debug_info["steps"].append(f"After count: {after_count}")
-
-            return {
-                "status": "success",
-                "games_in_list": len(POPULAR_GAMES),
-                "games_before": before_count,
-                "games_after": after_count,
-                "games_saved": count,
-                "debug": debug_info,
-            }
-    except Exception as e:
-        debug_info["steps"].append(f"ERROR: {str(e)}")
-        return {
-            "status": "error",
-            "error": str(e),
-            "traceback": traceback.format_exc(),
-            "debug": debug_info,
-        }
-
-
-# Debug endpoint to test Roblox API directly
-@app.get("/api/v1/admin/test-roblox", tags=["Admin"])
-async def test_roblox_api():
-    """Test Roblox API using the actual collector."""
-    import traceback
-    from collectors.roblox import POPULAR_GAMES, RobloxCollector
-
-    try:
-        async with RobloxCollector() as collector:
-            # Test get_game_details
-            test_ids = POPULAR_GAMES[:5]
-            details = await collector.get_game_details(test_ids)
-
-            return {
-                "status": "success",
-                "test_ids": test_ids,
-                "games_returned": len(details),
-                "last_error": collector.last_error,
-                "sample_games": [d.get("name") for d in details[:3]] if details else [],
-            }
-    except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e),
-            "traceback": traceback.format_exc(),
-        }
+    return {
+        "status": "collection triggered",
+        "games_in_list": len(POPULAR_GAMES),
+    }
 
 
 # Refresh endpoint - triggers collection and returns status
