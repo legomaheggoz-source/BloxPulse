@@ -124,6 +124,14 @@ async def manual_collect():
     return {"status": "collection triggered"}
 
 
+# GET version for easy browser testing
+@app.get("/api/v1/admin/collect", tags=["Admin"])
+async def manual_collect_get():
+    """Manually trigger data collection (GET version for browser testing)."""
+    await trigger_collection()
+    return {"status": "collection triggered via GET"}
+
+
 # Refresh endpoint - triggers collection and returns status
 @app.post("/api/v1/admin/refresh", tags=["Admin"])
 async def refresh_data():
