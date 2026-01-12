@@ -129,7 +129,7 @@ async def manual_collect():
 async def manual_collect_get():
     """Manually trigger data collection (GET version for browser testing)."""
     import traceback
-    from collectors.roblox import POPULAR_GAMES, run_collection
+    from collectors.roblox import POPULAR_GAMES, run_collection, RobloxCollector
     from database import async_session_maker, Game
     from sqlalchemy import select, func
 
@@ -155,6 +155,44 @@ async def manual_collect_get():
                 "collection_result": results,
             }
     except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+        }
+
+
+# Debug endpoint to test Roblox API directly
+@app.get("/api/v1/admin/test-roblox", tags=["Admin"])
+async def test_roblox_api():
+    """Test Roblox API connectivity."""
+    import httpx
+    from collectors.roblox import POPULAR_GAMES
+
+    test_ids = POPULAR_GAMES[:3]  # Test with first 3 games
+    url = f"https://games.roblox.com/v1/games?universeIds={','.join(map(str, test_ids))}"
+
+    try:
+        async with httpx.AsyncClient(
+            timeout=30.0,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Accept": "application/json",
+            },
+        ) as client:
+            response = await client.get(url)
+            data = response.json()
+
+            return {
+                "status": "success",
+                "test_ids": test_ids,
+                "http_status": response.status_code,
+                "response_keys": list(data.keys()) if isinstance(data, dict) else "not dict",
+                "games_returned": len(data.get("data", [])) if isinstance(data, dict) else 0,
+                "sample_game": data.get("data", [{}])[0].get("name") if data.get("data") else None,
+            }
+    except Exception as e:
+        import traceback
         return {
             "status": "error",
             "error": str(e),
