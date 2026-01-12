@@ -141,23 +141,47 @@ async def manual_collect_get():
 # Test monetization collection
 @app.get("/api/v1/admin/collect-monetization", tags=["Admin"])
 async def collect_monetization_get():
-    """Manually trigger monetization collection."""
+    """Manually trigger monetization collection with debug info."""
     import traceback
-    from collectors.monetization import run_monetization_collection
+    from collectors.monetization import MonetizationCollector
+    from database import Game
+    from sqlalchemy import select
+
+    debug_info = []
 
     try:
         async with async_session_maker() as session:
-            count = await run_monetization_collection(session)
-            await session.commit()
-            return {
-                "status": "success",
-                "passes_collected": count,
-            }
+            # Get game IDs
+            result = await session.execute(select(Game.id, Game.name))
+            games = result.fetchall()
+            debug_info.append(f"Found {len(games)} games in database")
+
+            if not games:
+                return {"status": "no_games", "debug": debug_info}
+
+            # Test fetching passes for first 3 games
+            async with MonetizationCollector() as collector:
+                test_results = []
+                for game_id, game_name in games[:3]:
+                    passes = await collector.get_game_passes(game_id)
+                    test_results.append({
+                        "game_id": game_id,
+                        "game_name": game_name,
+                        "passes_found": len(passes),
+                        "error": collector.last_error,
+                    })
+
+                return {
+                    "status": "debug",
+                    "games_in_db": len(games),
+                    "test_results": test_results,
+                }
     except Exception as e:
         return {
             "status": "error",
             "error": str(e),
             "traceback": traceback.format_exc(),
+            "debug": debug_info,
         }
 
 
