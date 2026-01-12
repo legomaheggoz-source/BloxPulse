@@ -159,12 +159,11 @@ async def collect_monetization_get():
             if not game_ids:
                 return {"status": "no_games", "debug": debug}
 
-            # Step 2: Fetch passes for first 3 games only (for testing)
+            # Step 2: Fetch passes for all games
             total_passes = 0
-            test_game_ids = game_ids[:3]
 
             async with MonetizationCollector() as collector:
-                for universe_id in test_game_ids:
+                for i, universe_id in enumerate(game_ids):
                     passes = await collector.get_game_passes(universe_id)
                     debug["steps"].append(f"Step 2: Game {universe_id} returned {len(passes)} passes")
 
