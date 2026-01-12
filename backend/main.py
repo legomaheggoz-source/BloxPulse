@@ -141,24 +141,80 @@ async def manual_collect_get():
 # Test and run monetization collection
 @app.get("/api/v1/admin/collect-monetization", tags=["Admin"])
 async def collect_monetization_get():
-    """Run monetization collection."""
+    """Run monetization collection with detailed logging."""
     import traceback
-    from collectors.monetization import run_monetization_collection
+    from sqlalchemy import select
+    from database import Game, GamePass
+    from collectors.monetization import MonetizationCollector, categorize_pass
+
+    debug = {"steps": []}
 
     try:
         async with async_session_maker() as session:
-            count = await run_monetization_collection(session)
+            # Step 1: Query games
+            result = await session.execute(select(Game.id))
+            game_ids = [row[0] for row in result.fetchall()]
+            debug["steps"].append(f"Step 1: Found {len(game_ids)} games")
+
+            if not game_ids:
+                return {"status": "no_games", "debug": debug}
+
+            # Step 2: Fetch passes for first 3 games only (for testing)
+            total_passes = 0
+            test_game_ids = game_ids[:3]
+
+            async with MonetizationCollector() as collector:
+                for universe_id in test_game_ids:
+                    passes = await collector.get_game_passes(universe_id)
+                    debug["steps"].append(f"Step 2: Game {universe_id} returned {len(passes)} passes")
+
+                    for pass_data in passes:
+                        pass_id = pass_data.get("id")
+                        if not pass_id:
+                            debug["steps"].append(f"  - Pass skipped: no id")
+                            continue
+
+                        # Upsert
+                        existing = await session.execute(
+                            select(GamePass).where(GamePass.id == pass_id)
+                        )
+                        game_pass = existing.scalar_one_or_none()
+
+                        if game_pass is None:
+                            game_pass = GamePass(id=pass_id)
+                            session.add(game_pass)
+
+                        game_pass.game_id = universe_id
+                        game_pass.name = pass_data["name"]
+                        game_pass.description = pass_data.get("description")
+                        game_pass.price = pass_data.get("price")
+                        game_pass.is_for_sale = pass_data.get("is_for_sale", True)
+                        game_pass.pass_type = categorize_pass(
+                            pass_data["name"],
+                            pass_data.get("description", "")
+                        )
+
+                        total_passes += 1
+
+            debug["steps"].append(f"Step 3: Total passes processed: {total_passes}")
+
             await session.commit()
+            debug["steps"].append("Step 4: Committed")
+
+            # Verify
+            result = await session.execute(select(GamePass).limit(5))
+            saved = result.scalars().all()
+            debug["saved_passes"] = [{"id": p.id, "name": p.name} for p in saved]
+
             return {
                 "status": "success",
-                "passes_collected": count,
+                "passes_collected": total_passes,
+                "debug": debug,
             }
     except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e),
-            "traceback": traceback.format_exc(),
-        }
+        debug["error"] = str(e)
+        debug["traceback"] = traceback.format_exc()
+        return {"status": "error", "debug": debug}
 
 
 # Debug: Test single game passes API
