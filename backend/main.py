@@ -165,34 +165,24 @@ async def manual_collect_get():
 # Debug endpoint to test Roblox API directly
 @app.get("/api/v1/admin/test-roblox", tags=["Admin"])
 async def test_roblox_api():
-    """Test Roblox API connectivity."""
-    import httpx
-    from collectors.roblox import POPULAR_GAMES
-
-    test_ids = POPULAR_GAMES[:3]  # Test with first 3 games
-    url = f"https://games.roblox.com/v1/games?universeIds={','.join(map(str, test_ids))}"
+    """Test Roblox API using the actual collector."""
+    import traceback
+    from collectors.roblox import POPULAR_GAMES, RobloxCollector
 
     try:
-        async with httpx.AsyncClient(
-            timeout=30.0,
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                "Accept": "application/json",
-            },
-        ) as client:
-            response = await client.get(url)
-            data = response.json()
+        async with RobloxCollector() as collector:
+            # Test get_game_details
+            test_ids = POPULAR_GAMES[:5]
+            details = await collector.get_game_details(test_ids)
 
             return {
                 "status": "success",
                 "test_ids": test_ids,
-                "http_status": response.status_code,
-                "response_keys": list(data.keys()) if isinstance(data, dict) else "not dict",
-                "games_returned": len(data.get("data", [])) if isinstance(data, dict) else 0,
-                "sample_game": data.get("data", [{}])[0].get("name") if data.get("data") else None,
+                "games_returned": len(details),
+                "last_error": collector.last_error,
+                "sample_games": [d.get("name") for d in details[:3]] if details else [],
             }
     except Exception as e:
-        import traceback
         return {
             "status": "error",
             "error": str(e),
