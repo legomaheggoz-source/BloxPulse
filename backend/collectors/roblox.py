@@ -146,10 +146,10 @@ class RobloxCollector:
         if not universe_ids:
             return []
 
-        # API accepts max 100 IDs at a time
+        # API accepts max 50 IDs at a time (was 100, but Roblox seems to have lowered it)
         all_games = []
-        for i in range(0, len(universe_ids), 100):
-            batch = universe_ids[i:i + 100]
+        for i in range(0, len(universe_ids), 50):
+            batch = universe_ids[i:i + 50]
             url = f"{self.GAMES_API}/v1/games"
             params = {"universeIds": ",".join(map(str, batch))}
 
@@ -165,8 +165,8 @@ class RobloxCollector:
             return {}
 
         icons = {}
-        for i in range(0, len(universe_ids), 100):
-            batch = universe_ids[i:i + 100]
+        for i in range(0, len(universe_ids), 50):
+            batch = universe_ids[i:i + 50]
             url = f"{self.THUMBNAIL_API}/v1/games/icons"
             params = {
                 "universeIds": ",".join(map(str, batch)),
