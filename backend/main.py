@@ -138,137 +138,27 @@ async def manual_collect_get():
     }
 
 
-# Test and run monetization collection
+# Run monetization collection
 @app.get("/api/v1/admin/collect-monetization", tags=["Admin"])
 async def collect_monetization_get():
-    """Run monetization collection with detailed logging."""
+    """Run monetization data collection for all tracked games."""
     import traceback
-    from sqlalchemy import select
-    from database import Game, GamePass
-    from collectors.monetization import MonetizationCollector, categorize_pass
-
-    debug = {"steps": []}
+    from collectors.monetization import run_monetization_collection
 
     try:
         async with async_session_maker() as session:
-            # Step 1: Query games
-            result = await session.execute(select(Game.id))
-            game_ids = [row[0] for row in result.fetchall()]
-            debug["steps"].append(f"Step 1: Found {len(game_ids)} games")
-
-            if not game_ids:
-                return {"status": "no_games", "debug": debug}
-
-            # Step 2: Fetch passes for all games
-            total_passes = 0
-
-            async with MonetizationCollector() as collector:
-                for i, universe_id in enumerate(game_ids):
-                    passes = await collector.get_game_passes(universe_id)
-                    debug["steps"].append(f"Step 2: Game {universe_id} returned {len(passes)} passes")
-
-                    for pass_data in passes:
-                        pass_id = pass_data.get("id")
-                        if not pass_id:
-                            debug["steps"].append(f"  - Pass skipped: no id")
-                            continue
-
-                        # Upsert
-                        existing = await session.execute(
-                            select(GamePass).where(GamePass.id == pass_id)
-                        )
-                        game_pass = existing.scalar_one_or_none()
-
-                        if game_pass is None:
-                            game_pass = GamePass(id=pass_id)
-                            session.add(game_pass)
-
-                        game_pass.game_id = universe_id
-                        game_pass.name = pass_data["name"]
-                        game_pass.description = pass_data.get("description")
-                        game_pass.price = pass_data.get("price")
-                        game_pass.is_for_sale = pass_data.get("is_for_sale", True)
-                        game_pass.pass_type = categorize_pass(
-                            pass_data["name"],
-                            pass_data.get("description", "")
-                        )
-
-                        total_passes += 1
-
-            debug["steps"].append(f"Step 3: Total passes processed: {total_passes}")
-
+            count = await run_monetization_collection(session)
             await session.commit()
-            debug["steps"].append("Step 4: Committed")
-
-            # Verify
-            result = await session.execute(select(GamePass).limit(5))
-            saved = result.scalars().all()
-            debug["saved_passes"] = [{"id": p.id, "name": p.name} for p in saved]
-
             return {
                 "status": "success",
-                "passes_collected": total_passes,
-                "debug": debug,
+                "passes_collected": count,
             }
     except Exception as e:
-        debug["error"] = str(e)
-        debug["traceback"] = traceback.format_exc()
-        return {"status": "error", "debug": debug}
-
-
-# Debug: Test single game passes API
-@app.get("/api/v1/admin/debug-passes/{universe_id}", tags=["Admin"])
-async def debug_game_passes(universe_id: int):
-    """Debug: Fetch passes for a single game and show raw response."""
-    import httpx
-
-    url = f"https://apis.roblox.com/game-passes/v1/universes/{universe_id}/game-passes"
-    params = {"passView": "Full"}
-
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        try:
-            response = await client.get(url, params=params)
-            return {
-                "status_code": response.status_code,
-                "url": str(response.url),
-                "raw_response": response.json() if response.status_code == 200 else response.text[:500],
-                "keys": list(response.json().keys()) if response.status_code == 200 else None,
-            }
-        except Exception as e:
-            return {"error": str(e)}
-
-
-# Debug: Full monetization debug
-@app.get("/api/v1/admin/debug-monetization", tags=["Admin"])
-async def debug_monetization():
-    """Debug: Step through monetization collection."""
-    from sqlalchemy import select
-    from database import Game
-    from collectors.monetization import MonetizationCollector
-
-    debug_info = {}
-
-    async with async_session_maker() as session:
-        # Step 1: Get games
-        result = await session.execute(select(Game.id, Game.name))
-        games = result.fetchall()
-        debug_info["total_games_in_db"] = len(games)
-        debug_info["first_5_games"] = [{"id": g[0], "name": g[1]} for g in games[:5]]
-
-        if not games:
-            return debug_info
-
-        # Step 2: Test fetching passes for first game
-        first_game_id = games[0][0]
-        debug_info["testing_game_id"] = first_game_id
-
-        async with MonetizationCollector() as collector:
-            passes = await collector.get_game_passes(first_game_id)
-            debug_info["passes_found_for_first_game"] = len(passes)
-            debug_info["first_3_passes"] = passes[:3] if passes else []
-            debug_info["collector_last_error"] = collector.last_error
-
-    return debug_info
+        return {
+            "status": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+        }
 
 
 # Refresh endpoint - triggers collection and returns status
