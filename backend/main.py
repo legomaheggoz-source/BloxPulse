@@ -138,6 +138,29 @@ async def manual_collect_get():
     }
 
 
+# Test monetization collection
+@app.get("/api/v1/admin/collect-monetization", tags=["Admin"])
+async def collect_monetization_get():
+    """Manually trigger monetization collection."""
+    import traceback
+    from collectors.monetization import run_monetization_collection
+
+    try:
+        async with async_session_maker() as session:
+            count = await run_monetization_collection(session)
+            await session.commit()
+            return {
+                "status": "success",
+                "passes_collected": count,
+            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+        }
+
+
 # Refresh endpoint - triggers collection and returns status
 @app.post("/api/v1/admin/refresh", tags=["Admin"])
 async def refresh_data():
