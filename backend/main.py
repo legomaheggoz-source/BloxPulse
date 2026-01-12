@@ -141,47 +141,32 @@ async def manual_collect_get():
 # Test monetization collection
 @app.get("/api/v1/admin/collect-monetization", tags=["Admin"])
 async def collect_monetization_get():
-    """Manually trigger monetization collection with debug info."""
-    import traceback
-    from collectors.monetization import MonetizationCollector
-    from database import Game
-    from sqlalchemy import select
+    """Test game passes API directly."""
+    import httpx
 
-    debug_info = []
+    # Test with Work at a Pizza Place
+    url = "https://apis.roblox.com/game-passes/v1/universes/47545/game-passes"
+    params = {"passView": "Full"}
 
     try:
-        async with async_session_maker() as session:
-            # Get game IDs
-            result = await session.execute(select(Game.id, Game.name))
-            games = result.fetchall()
-            debug_info.append(f"Found {len(games)} games in database")
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url, params=params)
+            data = response.json()
 
-            if not games:
-                return {"status": "no_games", "debug": debug_info}
-
-            # Test fetching passes for first 3 games
-            async with MonetizationCollector() as collector:
-                test_results = []
-                for game_id, game_name in games[:3]:
-                    passes = await collector.get_game_passes(game_id)
-                    test_results.append({
-                        "game_id": game_id,
-                        "game_name": game_name,
-                        "passes_found": len(passes),
-                        "error": collector.last_error,
-                    })
-
-                return {
-                    "status": "debug",
-                    "games_in_db": len(games),
-                    "test_results": test_results,
-                }
+            return {
+                "status": "success",
+                "http_status": response.status_code,
+                "response_keys": list(data.keys()) if isinstance(data, dict) else "not dict",
+                "data_count": len(data.get("data", [])) if isinstance(data, dict) else 0,
+                "first_pass": data.get("data", [{}])[0] if data.get("data") else None,
+                "raw_sample": str(data)[:500],
+            }
     except Exception as e:
+        import traceback
         return {
             "status": "error",
             "error": str(e),
             "traceback": traceback.format_exc(),
-            "debug": debug_info,
         }
 
 
