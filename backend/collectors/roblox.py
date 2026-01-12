@@ -21,9 +21,10 @@ from database import Game, TrendSnapshot, CollectionLog
 # Curated list of popular Roblox games (Universe IDs - NOT Place IDs!)
 # These are VERIFIED Universe IDs that return actual games (not placeholder "X's Place")
 # Each ID has been manually validated against the Roblox API
-# Updated: 2026-01-11 with 50+ verified games
+# Updated: 2026-01-11 with 55+ verified games
 POPULAR_GAMES = [
     # ===== TIER 1: Mega CCU (100k+) =====
+    6035872082,   # RIVALS FPS (278k CCU - 2024/2025 breakout hit!)
     7436755782,   # Grow a Garden (NEW 2026 viral hit - 64k CCU)
     1686885941,   # Brookhaven RP (700k+)
     994732206,    # Blox Fruits (400k+)
@@ -35,6 +36,7 @@ POPULAR_GAMES = [
     5750914919,   # Fisch (67k CCU)
 
     # ===== TIER 2: High CCU (20k-100k) =====
+    5578556129,   # Anime Vanguards (44k CCU - tower defense)
     2619619496,   # BedWars (45k)
     3317771874,   # Pet Simulator 99 (38k)
     3647333358,   # Evade (36k)
@@ -47,10 +49,13 @@ POPULAR_GAMES = [
     65241,        # Natural Disaster Survival (25k)
     321778215,    # Royale High (25k)
     1000233041,   # 3008 (SCP game) (24k)
+    1202096104,   # Driving Empire (21k CCU - car sim)
     2440500124,   # DOORS (18k)
     245662005,    # Jailbreak (18k)
 
     # ===== TIER 3: Medium CCU (5k-20k) =====
+    2380077519,   # Slap Battles (17k CCU)
+    73885730,     # Prison Life (16k CCU)
     47545,        # Work at a Pizza Place (10k)
     31970568,     # Theme Park Tycoon 2 (8k)
     1451439645,   # King Legacy (6k)
@@ -64,6 +69,7 @@ POPULAR_GAMES = [
     2404080894,   # Funky Friday (2.6k)
     2471084,      # Lumber Tycoon 2 (2.5k)
     115797356,    # Counter Blox (2.3k)
+    1709832923,   # Zombie Uprising (2k CCU)
     873703865,    # Westbound (2k)
     83858907,     # Speed Run 4 (1.8k)
     1335695570,   # Ninja Legends (2k)

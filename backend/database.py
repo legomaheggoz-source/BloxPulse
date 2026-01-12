@@ -124,6 +124,31 @@ class SocialTrend(Base):
         return f"<SocialTrend {self.platform}: {self.title[:30]}...>"
 
 
+class GamePass(Base):
+    """Game pass/monetization data for games."""
+
+    __tablename__ = "game_passes"
+
+    id = Column(Integer, primary_key=True)  # Roblox pass ID
+    game_id = Column(Integer, nullable=False, index=True)  # Universe ID
+
+    # Pass details
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    price = Column(Integer, nullable=True)  # Robux price, None if not for sale
+    is_for_sale = Column(Boolean, default=True)
+
+    # Categorization (for analysis)
+    pass_type = Column(String(50), nullable=True)  # vip, cosmetic, power, access, etc.
+
+    # Tracking
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<GamePass {self.id}: {self.name} ({self.price}R$)>"
+
+
 class CollectionLog(Base):
     """Log of data collection runs."""
 

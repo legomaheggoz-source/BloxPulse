@@ -13,6 +13,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from config import settings
 from database import async_session_maker
 from collectors.roblox import run_collection
+from collectors.monetization import run_monetization_collection
 
 
 logger = logging.getLogger(__name__)
@@ -27,9 +28,16 @@ async def collect_data_job():
 
     async with async_session_maker() as session:
         try:
+            # Collect game data
             results = await run_collection(session)
             await session.commit()
-            logger.info(f"Data collection completed: {results}")
+            logger.info(f"Game collection completed: {results}")
+
+            # Collect monetization data
+            monetization_count = await run_monetization_collection(session)
+            await session.commit()
+            logger.info(f"Monetization collection completed: {monetization_count} passes")
+
         except Exception as e:
             logger.error(f"Data collection failed: {e}")
             await session.rollback()

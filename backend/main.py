@@ -18,6 +18,7 @@ from config import settings
 from database import init_db, async_session_maker
 from routes import health_router, trends_router, games_router
 from routes.export import router as export_router
+from routes.monetization import router as monetization_router
 from services.scheduler import setup_scheduler, trigger_collection
 from services.data_sync import data_sync_service
 
@@ -99,6 +100,7 @@ app.include_router(health_router)
 app.include_router(trends_router)
 app.include_router(games_router)
 app.include_router(export_router)
+app.include_router(monetization_router)
 
 
 # API root endpoint

@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc
 
-from database import get_session, Game, TrendSnapshot
+from database import get_session, Game, TrendSnapshot, GamePass
 
 
 router = APIRouter(prefix="/api/v1/export", tags=["Export"])
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api/v1/export", tags=["Export"])
 # Schema Version
 # =============================================================================
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"  # Added monetization data
 
 
 # =============================================================================
@@ -80,6 +80,36 @@ class MarketOpportunity(BaseModel):
     recommended_action: str
 
 
+class MonetizationStrategy(BaseModel):
+    """Monetization strategy insights for a game or genre."""
+    pass_count: int = Field(description="Number of game passes")
+    price_range: List[int] = Field(description="[min, max] price in Robux")
+    avg_price: float = Field(description="Average pass price in Robux")
+    total_potential_spend: int = Field(description="Sum of all pass prices")
+    pass_type_breakdown: dict = Field(description="Distribution of pass types")
+    pricing_tier: str = Field(description="budget, standard, premium, whale-focused")
+
+
+class GameMonetizationAnalysis(BaseModel):
+    """Monetization analysis for a specific game."""
+    game_id: int
+    game_name: str
+    strategy: Optional[MonetizationStrategy]
+    passes: List[dict] = Field(description="List of game passes with details")
+
+
+class MonetizationPatterns(BaseModel):
+    """Overall monetization patterns across all games."""
+    total_passes_tracked: int
+    games_with_passes: int
+    avg_passes_per_game: float
+    overall_avg_price: float
+    price_tier_distribution: dict = Field(description="Distribution across price tiers")
+    pass_type_popularity: List[dict] = Field(description="Most common pass types")
+    genre_monetization: List[dict] = Field(description="Avg price by genre")
+    top_strategies: List[str] = Field(description="Most successful monetization approaches")
+
+
 class ZettaExport(BaseModel):
     """
     Complete export schema for Zetta game creator integration.
@@ -98,6 +128,10 @@ class ZettaExport(BaseModel):
     # Detailed data
     games: List[GameAnalysis]
     genres: List[GenreAnalysis]
+
+    # Monetization insights
+    monetization: Optional[MonetizationPatterns] = Field(description="Overall monetization patterns")
+    game_monetization: List[GameMonetizationAnalysis] = Field(default=[], description="Per-game monetization details")
 
     # Actionable insights
     opportunities: List[MarketOpportunity]
@@ -162,6 +196,18 @@ def calculate_saturation(game_count: int, avg_ccu: float) -> str:
         return "low"   # Few games, high average = opportunity
     else:
         return "medium"
+
+
+def determine_pricing_tier(avg_price: float) -> str:
+    """Determine the pricing tier based on average pass price."""
+    if avg_price < 100:
+        return "budget"
+    elif avg_price < 300:
+        return "standard"
+    elif avg_price < 600:
+        return "premium"
+    else:
+        return "whale-focused"
 
 
 def identify_opportunities(games: list, genres: list, total_ccu: int) -> List[MarketOpportunity]:
@@ -383,6 +429,136 @@ async def export_for_zetta(
         },
     }
 
+    # =========================================================================
+    # Monetization Data
+    # =========================================================================
+
+    # Fetch all game passes
+    passes_result = await session.execute(
+        select(GamePass).where(GamePass.is_for_sale == True)
+    )
+    all_passes = passes_result.scalars().all()
+
+    # Build monetization patterns
+    monetization_patterns = None
+    game_monetization = []
+
+    if all_passes:
+        # Group passes by game
+        passes_by_game = {}
+        for p in all_passes:
+            if p.game_id not in passes_by_game:
+                passes_by_game[p.game_id] = []
+            passes_by_game[p.game_id].append(p)
+
+        # Calculate overall stats
+        prices = [p.price for p in all_passes if p.price]
+        overall_avg = sum(prices) / len(prices) if prices else 0
+
+        # Pass type popularity
+        type_counts = {}
+        for p in all_passes:
+            pt = p.pass_type or "other"
+            type_counts[pt] = type_counts.get(pt, 0) + 1
+
+        type_popularity = sorted(
+            [{"type": t, "count": c, "percent": round(c / len(all_passes) * 100, 1)}
+             for t, c in type_counts.items()],
+            key=lambda x: x["count"],
+            reverse=True
+        )
+
+        # Price tier distribution
+        tier_counts = {"budget": 0, "standard": 0, "premium": 0, "luxury": 0, "whale": 0}
+        for price in prices:
+            if price < 50:
+                tier_counts["budget"] += 1
+            elif price < 200:
+                tier_counts["standard"] += 1
+            elif price < 500:
+                tier_counts["premium"] += 1
+            elif price < 1000:
+                tier_counts["luxury"] += 1
+            else:
+                tier_counts["whale"] += 1
+
+        # Genre monetization (need to cross-reference with games)
+        genre_prices = {}
+        for game in games:
+            if game.id in passes_by_game:
+                genre = game.genre or "Unknown"
+                if genre not in genre_prices:
+                    genre_prices[genre] = []
+                for p in passes_by_game[game.id]:
+                    if p.price:
+                        genre_prices[genre].append(p.price)
+
+        genre_monetization = sorted(
+            [{"genre": g, "avg_price": round(sum(prices) / len(prices), 0), "pass_count": len(prices)}
+             for g, prices in genre_prices.items() if prices],
+            key=lambda x: x["avg_price"],
+            reverse=True
+        )
+
+        # Generate strategy insights
+        top_strategies = []
+        if type_popularity:
+            top_strategies.append(f"Most common pass type: {type_popularity[0]['type']} ({type_popularity[0]['percent']}%)")
+        if overall_avg > 0:
+            top_strategies.append(f"Market average price: {overall_avg:.0f} Robux")
+        if genre_monetization:
+            top_genre = genre_monetization[0]
+            top_strategies.append(f"Highest monetizing genre: {top_genre['genre']} (avg {top_genre['avg_price']:.0f}R$)")
+
+        # VIP analysis
+        vip_passes = [p for p in all_passes if p.pass_type == "vip" and p.price]
+        if vip_passes:
+            avg_vip = sum(p.price for p in vip_passes) / len(vip_passes)
+            top_strategies.append(f"VIP passes average: {avg_vip:.0f} Robux")
+
+        monetization_patterns = MonetizationPatterns(
+            total_passes_tracked=len(all_passes),
+            games_with_passes=len(passes_by_game),
+            avg_passes_per_game=round(len(all_passes) / len(passes_by_game), 1) if passes_by_game else 0,
+            overall_avg_price=round(overall_avg, 0),
+            price_tier_distribution=tier_counts,
+            pass_type_popularity=type_popularity[:10],
+            genre_monetization=genre_monetization[:10],
+            top_strategies=top_strategies,
+        )
+
+        # Per-game monetization details (for top 20 games)
+        for game in games[:20]:
+            if game.id in passes_by_game:
+                game_passes = passes_by_game[game.id]
+                prices = [p.price for p in game_passes if p.price]
+
+                if prices:
+                    # Pass type breakdown
+                    type_breakdown = {}
+                    for p in game_passes:
+                        pt = p.pass_type or "other"
+                        type_breakdown[pt] = type_breakdown.get(pt, 0) + 1
+
+                    strategy = MonetizationStrategy(
+                        pass_count=len(game_passes),
+                        price_range=[min(prices), max(prices)],
+                        avg_price=round(sum(prices) / len(prices), 0),
+                        total_potential_spend=sum(prices),
+                        pass_type_breakdown=type_breakdown,
+                        pricing_tier=determine_pricing_tier(sum(prices) / len(prices)),
+                    )
+
+                    game_monetization.append(GameMonetizationAnalysis(
+                        game_id=game.id,
+                        game_name=game.name,
+                        strategy=strategy,
+                        passes=[
+                            {"name": p.name, "price": p.price, "type": p.pass_type}
+                            for p in game_passes
+                        ],
+                    ))
+
     return ZettaExport(
         schema_version=SCHEMA_VERSION,
         export_timestamp=datetime.utcnow(),
@@ -390,6 +566,8 @@ async def export_for_zetta(
         summary=summary,
         games=game_analyses,
         genres=genre_analyses,
+        monetization=monetization_patterns,
+        game_monetization=game_monetization,
         opportunities=opportunities,
         recommendations=recommendations,
     )
@@ -412,8 +590,20 @@ async def get_zetta_schema():
             "summary": "High-level market statistics",
             "games": "Array of GameAnalysis objects with metrics and scores",
             "genres": "Array of GenreAnalysis objects with saturation levels",
+            "monetization": "Overall monetization patterns across all games",
+            "game_monetization": "Per-game monetization details for top games",
             "opportunities": "Array of identified market opportunities",
             "recommendations": "Actionable recommendations for game development",
+        },
+        "monetization_fields": {
+            "total_passes_tracked": "Total number of game passes collected",
+            "games_with_passes": "Number of games that have monetization",
+            "avg_passes_per_game": "Average passes per game",
+            "overall_avg_price": "Market average pass price in Robux",
+            "price_tier_distribution": "Distribution across budget/standard/premium/luxury/whale tiers",
+            "pass_type_popularity": "Most common pass types (vip, cosmetic, power, etc.)",
+            "genre_monetization": "Average prices by genre",
+            "top_strategies": "Key monetization insights",
         },
         "tiers": {
             "mega": "100,000+ concurrent players",
@@ -421,6 +611,12 @@ async def get_zetta_schema():
             "mid": "5,000-19,999 concurrent players",
             "low": "1,000-4,999 concurrent players",
             "micro": "<1,000 concurrent players",
+        },
+        "pricing_tiers": {
+            "budget": "Average pass price <100 Robux",
+            "standard": "Average pass price 100-299 Robux",
+            "premium": "Average pass price 300-599 Robux",
+            "whale-focused": "Average pass price 600+ Robux",
         },
         "scores": {
             "popularity_score": "0-100, based on CCU rank",
