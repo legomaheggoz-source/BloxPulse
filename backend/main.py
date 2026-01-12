@@ -183,6 +183,39 @@ async def debug_game_passes(universe_id: int):
             return {"error": str(e)}
 
 
+# Debug: Full monetization debug
+@app.get("/api/v1/admin/debug-monetization", tags=["Admin"])
+async def debug_monetization():
+    """Debug: Step through monetization collection."""
+    from sqlalchemy import select
+    from database import Game
+    from collectors.monetization import MonetizationCollector
+
+    debug_info = {}
+
+    async with async_session_maker() as session:
+        # Step 1: Get games
+        result = await session.execute(select(Game.id, Game.name))
+        games = result.fetchall()
+        debug_info["total_games_in_db"] = len(games)
+        debug_info["first_5_games"] = [{"id": g[0], "name": g[1]} for g in games[:5]]
+
+        if not games:
+            return debug_info
+
+        # Step 2: Test fetching passes for first game
+        first_game_id = games[0][0]
+        debug_info["testing_game_id"] = first_game_id
+
+        async with MonetizationCollector() as collector:
+            passes = await collector.get_game_passes(first_game_id)
+            debug_info["passes_found_for_first_game"] = len(passes)
+            debug_info["first_3_passes"] = passes[:3] if passes else []
+            debug_info["collector_last_error"] = collector.last_error
+
+    return debug_info
+
+
 # Refresh endpoint - triggers collection and returns status
 @app.post("/api/v1/admin/refresh", tags=["Admin"])
 async def refresh_data():
