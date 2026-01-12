@@ -138,31 +138,22 @@ async def manual_collect_get():
     }
 
 
-# Test monetization collection
+# Test and run monetization collection
 @app.get("/api/v1/admin/collect-monetization", tags=["Admin"])
 async def collect_monetization_get():
-    """Test game passes API directly."""
-    import httpx
-
-    # Test with Work at a Pizza Place
-    url = "https://apis.roblox.com/game-passes/v1/universes/47545/game-passes"
-    params = {"passView": "Full"}
+    """Run monetization collection."""
+    import traceback
+    from collectors.monetization import run_monetization_collection
 
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(url, params=params)
-            data = response.json()
-
+        async with async_session_maker() as session:
+            count = await run_monetization_collection(session)
+            await session.commit()
             return {
                 "status": "success",
-                "http_status": response.status_code,
-                "response_keys": list(data.keys()) if isinstance(data, dict) else "not dict",
-                "data_count": len(data.get("data", [])) if isinstance(data, dict) else 0,
-                "first_pass": data.get("data", [{}])[0] if data.get("data") else None,
-                "raw_sample": str(data)[:500],
+                "passes_collected": count,
             }
     except Exception as e:
-        import traceback
         return {
             "status": "error",
             "error": str(e),

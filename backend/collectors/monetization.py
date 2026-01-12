@@ -88,7 +88,8 @@ class MonetizationCollector:
             data = response.json()
 
             passes = []
-            for item in data.get("data", []):
+            # API returns "gamePasses" not "data"
+            for item in data.get("gamePasses", []):
                 # Extract price - handle different formats
                 price = item.get("price")
                 if price is None:
