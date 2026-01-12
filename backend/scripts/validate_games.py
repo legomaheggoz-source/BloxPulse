@@ -43,7 +43,7 @@ async def get_game_details(client: httpx.AsyncClient, universe_ids: list[int]) -
 
     valid_games = []
 
-    # Process in batches of 50
+    # Process in batches of 50 (Roblox API limit)
     for i in range(0, len(universe_ids), 50):
         batch = universe_ids[i:i + 50]
         url = "https://games.roblox.com/v1/games"
