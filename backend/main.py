@@ -128,8 +128,38 @@ async def manual_collect():
 @app.get("/api/v1/admin/collect", tags=["Admin"])
 async def manual_collect_get():
     """Manually trigger data collection (GET version for browser testing)."""
-    await trigger_collection()
-    return {"status": "collection triggered via GET"}
+    import traceback
+    from collectors.roblox import POPULAR_GAMES, run_collection
+    from database import async_session_maker, Game
+    from sqlalchemy import select, func
+
+    try:
+        async with async_session_maker() as session:
+            # Check current count
+            result = await session.execute(select(func.count(Game.id)))
+            before_count = result.scalar() or 0
+
+            # Run collection
+            results = await run_collection(session)
+            await session.commit()
+
+            # Check new count
+            result = await session.execute(select(func.count(Game.id)))
+            after_count = result.scalar() or 0
+
+            return {
+                "status": "success",
+                "games_in_list": len(POPULAR_GAMES),
+                "games_before": before_count,
+                "games_after": after_count,
+                "collection_result": results,
+            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+        }
 
 
 # Refresh endpoint - triggers collection and returns status
