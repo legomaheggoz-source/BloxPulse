@@ -309,6 +309,65 @@ export function Analytics() {
         </motion.div>
       </div>
 
+      {/* Strategic Takeaways */}
+      <motion.div
+        className="glass-panel p-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.4 }}
+      >
+        <h3 className="font-semibold text-aurora-deep-blue mb-4 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-aurora-gold" />
+          How to Use This Data
+        </h3>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <h4 className="font-medium text-aurora-deep-blue">Reading the Charts</h4>
+            <ul className="space-y-2 text-sm text-aurora-deep-blue/80">
+              <li className="flex gap-2">
+                <span className="text-aurora-gold">•</span>
+                <span><strong>Top Games by CCU</strong> - Shows what's popular RIGHT NOW. High CCU = proven demand, but also more competition.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-aurora-cyan">•</span>
+                <span><strong>Genre Distribution</strong> - Fewer games in a genre with high CCU = opportunity. Many games with low avg CCU = saturated.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-aurora-purple">•</span>
+                <span><strong>Player Tier</strong> - Target the 5k-20k tier initially. 100k+ requires significant resources; &lt;1k is validation territory.</span>
+              </li>
+            </ul>
+          </div>
+          <div className="space-y-4">
+            <h4 className="font-medium text-aurora-deep-blue">Actionable Strategy</h4>
+            <div className="space-y-3">
+              {stats && trendingData && (
+                <>
+                  <div className="p-3 bg-aurora-green/10 border border-aurora-green/30 rounded-lg">
+                    <div className="text-sm font-medium text-aurora-green">DO: Enter markets with</div>
+                    <div className="text-sm text-aurora-deep-blue/80 mt-1">
+                      {genresData?.genres.filter(g => g.count <= 3).slice(0, 2).map(g => g.name).join(', ') || 'Low competition genres'} - fewer competitors, room to grow
+                    </div>
+                  </div>
+                  <div className="p-3 bg-aurora-orange/10 border border-aurora-orange/30 rounded-lg">
+                    <div className="text-sm font-medium text-aurora-orange">CAUTION: Highly competitive</div>
+                    <div className="text-sm text-aurora-deep-blue/80 mt-1">
+                      {stats.top_genre || 'Top genre'} has the most games - need strong differentiation to succeed
+                    </div>
+                  </div>
+                  <div className="p-3 bg-aurora-cyan/10 border border-aurora-cyan/30 rounded-lg">
+                    <div className="text-sm font-medium text-aurora-cyan">TARGET: Realistic goal</div>
+                    <div className="text-sm text-aurora-deep-blue/80 mt-1">
+                      5,000+ CCU puts you in top {tierData.filter(t => ['100k+', '20k-100k', '5k-20k'].includes(t.name)).reduce((a,b) => a + b.count, 0)} games ({((tierData.filter(t => ['100k+', '20k-100k', '5k-20k'].includes(t.name)).reduce((a,b) => a + b.count, 0) / (trendingData?.games.length || 1)) * 100).toFixed(0)}% of tracked)
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Historical Note */}
       <div className="glass-panel p-4 text-center">
         <p className="text-sm text-aurora-deep-blue/60">

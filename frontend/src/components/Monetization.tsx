@@ -304,7 +304,7 @@ export function Monetization() {
             </motion.div>
           </div>
 
-          {/* Strategy Insights */}
+          {/* How to Use This Data */}
           <motion.div
             className="glass-panel p-6"
             initial={{ opacity: 0, y: 20 }}
@@ -312,42 +312,47 @@ export function Monetization() {
             transition={{ delay: 0.8 }}
           >
             <h3 className="font-semibold text-aurora-deep-blue mb-4">
-              Key Monetization Insights
+              How to Use This Data
             </h3>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-lg bg-aurora-gradient-light border border-aurora-cyan/20">
-                <div className="text-sm font-medium text-aurora-deep-blue mb-2">
-                  Recommended VIP Price
-                </div>
-                <div className="text-xl font-bold text-aurora-gold">
-                  {Math.round(stats.avg_price * 1.5)} - {Math.round(stats.avg_price * 2)} R$
-                </div>
-                <div className="text-xs text-aurora-deep-blue/60 mt-1">
-                  Based on market average of {Math.round(stats.avg_price)} R$
-                </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h4 className="font-medium text-aurora-deep-blue">Reading the Charts</h4>
+                <ul className="space-y-2 text-sm text-aurora-deep-blue/80">
+                  <li className="flex gap-2">
+                    <span className="text-aurora-gold">•</span>
+                    <span><strong>Price Tiers</strong> - Most passes are {stats.price_tiers.premium > stats.price_tiers.standard ? 'Premium (200-499 R$)' : 'Standard (50-199 R$)'}. Price your core passes here for best conversion.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-aurora-cyan">•</span>
+                    <span><strong>Pass Types</strong> - "{stats.pass_types[0]?.type}" dominates, but differentiate by focusing on underserved types like "{stats.pass_types.slice(-2)[0]?.type || 'utility'}".</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-aurora-purple">•</span>
+                    <span><strong>Top Monetizers</strong> - High total value comes from MANY passes, not expensive ones. Quantity at reasonable prices wins.</span>
+                  </li>
+                </ul>
               </div>
-
-              <div className="p-4 rounded-lg bg-aurora-gradient-light border border-aurora-cyan/20">
-                <div className="text-sm font-medium text-aurora-deep-blue mb-2">
-                  Optimal Pass Count
-                </div>
-                <div className="text-xl font-bold text-aurora-purple">
-                  5 - 10 passes
-                </div>
-                <div className="text-xs text-aurora-deep-blue/60 mt-1">
-                  Top games average {(stats.total_passes / Math.max(stats.games_with_passes, 1)).toFixed(0)} passes
-                </div>
-              </div>
-
-              <div className="p-4 rounded-lg bg-aurora-gradient-light border border-aurora-cyan/20">
-                <div className="text-sm font-medium text-aurora-deep-blue mb-2">
-                  Most Popular Type
-                </div>
-                <div className="text-xl font-bold text-aurora-cyan capitalize">
-                  {stats.pass_types[0]?.type || 'VIP'}
-                </div>
-                <div className="text-xs text-aurora-deep-blue/60 mt-1">
-                  {stats.pass_types[0]?.count || 0} passes ({((stats.pass_types[0]?.count || 0) / stats.total_passes * 100).toFixed(1)}% of market)
+              <div className="space-y-4">
+                <h4 className="font-medium text-aurora-deep-blue">Your Monetization Playbook</h4>
+                <div className="space-y-3">
+                  <div className="p-3 bg-aurora-green/10 border border-aurora-green/30 rounded-lg">
+                    <div className="text-sm font-medium text-aurora-green">ESSENTIAL: VIP Pass</div>
+                    <div className="text-sm text-aurora-deep-blue/80 mt-1">
+                      Price at {Math.round(stats.avg_price * 0.8)} - {Math.round(stats.avg_price * 1.2)} R$ (market avg: {Math.round(stats.avg_price)} R$). Include 3-5 perks minimum.
+                    </div>
+                  </div>
+                  <div className="p-3 bg-aurora-gold/10 border border-aurora-gold/30 rounded-lg">
+                    <div className="text-sm font-medium text-aurora-gold">WHALE BAIT: Premium Tier</div>
+                    <div className="text-sm text-aurora-deep-blue/80 mt-1">
+                      Add 1-2 passes at 1000+ R$ for completionists. Only {stats.price_tiers.whale} passes ({((stats.price_tiers.whale / stats.total_passes) * 100).toFixed(1)}%) are whale-tier - low competition.
+                    </div>
+                  </div>
+                  <div className="p-3 bg-aurora-cyan/10 border border-aurora-cyan/30 rounded-lg">
+                    <div className="text-sm font-medium text-aurora-cyan">VOLUME: {(stats.total_passes / Math.max(stats.games_with_passes, 1)).toFixed(0)} passes average</div>
+                    <div className="text-sm text-aurora-deep-blue/80 mt-1">
+                      Target 5-10 passes: VIP, 2-3 cosmetics, 1-2 power/utility, 1 whale option. Total potential spend: {Math.round(stats.avg_price * 7)} R$.
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
