@@ -79,7 +79,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="BloxPulse API",
     description="Roblox Market Intelligence Engine - Track trends, analyze games, generate concepts.",
-    version="1.0.0",
+    version="1.1.0",  # Added monetization UI and Zetta export
     lifespan=lifespan,
     docs_url="/api/docs",
     redoc_url="/api/redoc",
