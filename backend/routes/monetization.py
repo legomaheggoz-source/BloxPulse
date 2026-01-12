@@ -126,9 +126,11 @@ async def get_monetization_stats(
         "total_passes": totals.total_passes if totals else 0,
         "games_with_passes": totals.games_with_passes if totals else 0,
         "avg_price": round(prices.avg_price, 0) if prices and prices.avg_price else 0,
-        "min_price": prices.min_price if prices else 0,
-        "max_price": prices.max_price if prices else 0,
-        "pass_type_distribution": type_dist,
+        "price_range": {
+            "min": prices.min_price if prices else 0,
+            "max": prices.max_price if prices else 0,
+        },
+        "pass_types": type_dist,
         "price_tiers": {
             "budget": price_tiers.get("budget", 0),      # <50
             "standard": price_tiers.get("standard", 0),  # 50-199
@@ -137,6 +139,59 @@ async def get_monetization_stats(
             "whale": price_tiers.get("whale", 0),        # 1000+
         },
     }
+
+
+@router.get("/top")
+async def get_top_monetizing_games(
+    limit: int = Query(10, le=50),
+    session: AsyncSession = Depends(get_session),
+):
+    """Get top monetizing games ranked by total pass value."""
+    # Get games with their total pass values
+    game_stats = await session.execute(
+        select(
+            Game.id,
+            Game.name,
+            func.count(GamePass.id).label("pass_count"),
+            func.sum(GamePass.price).label("total_value"),
+            func.avg(GamePass.price).label("avg_price"),
+        )
+        .join(GamePass, Game.id == GamePass.game_id)
+        .where(GamePass.is_for_sale == True, GamePass.price.isnot(None))
+        .group_by(Game.id)
+        .order_by(func.sum(GamePass.price).desc())
+        .limit(limit)
+    )
+
+    results = []
+    for row in game_stats.fetchall():
+        # Get passes for this game
+        passes_result = await session.execute(
+            select(GamePass)
+            .where(GamePass.game_id == row.id, GamePass.is_for_sale == True)
+            .order_by(GamePass.price.desc().nullslast())
+        )
+        passes = passes_result.scalars().all()
+
+        results.append({
+            "game_id": row.id,
+            "game_name": row.name,
+            "pass_count": row.pass_count,
+            "total_value": row.total_value or 0,
+            "avg_price": round(row.avg_price, 0) if row.avg_price else 0,
+            "passes": [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "price": p.price,
+                    "pass_type": p.pass_type,
+                    "is_for_sale": p.is_for_sale,
+                }
+                for p in passes[:10]  # Limit to top 10 passes per game
+            ],
+        })
+
+    return results
 
 
 @router.get("/patterns")

@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Header } from './components/Header'
 import { Dashboard } from './components/Dashboard'
 import { Analytics } from './components/Analytics'
+import { Monetization } from './components/Monetization'
 import { StatsBar } from './components/StatsBar'
 
-export type TabType = 'trends' | 'analytics'
+export type TabType = 'trends' | 'analytics' | 'monetization'
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('trends')
@@ -27,7 +28,7 @@ function App() {
 
           {/* Tab Content */}
           <AnimatePresence mode="wait">
-            {activeTab === 'trends' ? (
+            {activeTab === 'trends' && (
               <motion.div
                 key="trends"
                 initial={{ opacity: 0, x: -20 }}
@@ -37,7 +38,8 @@ function App() {
               >
                 <Dashboard />
               </motion.div>
-            ) : (
+            )}
+            {activeTab === 'analytics' && (
               <motion.div
                 key="analytics"
                 initial={{ opacity: 0, x: 20 }}
@@ -46,6 +48,17 @@ function App() {
                 transition={{ duration: 0.2 }}
               >
                 <Analytics />
+              </motion.div>
+            )}
+            {activeTab === 'monetization' && (
+              <motion.div
+                key="monetization"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Monetization />
               </motion.div>
             )}
           </AnimatePresence>

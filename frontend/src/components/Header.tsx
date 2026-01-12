@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Activity, TrendingUp, Zap, RefreshCw } from 'lucide-react'
+import { Activity, TrendingUp, Zap, RefreshCw, DollarSign, Download, Check } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { refreshData } from '../lib/api'
+import { refreshData, downloadZettaExport } from '../lib/api'
 import type { TabType } from '../App'
 
 interface HeaderProps {
@@ -12,6 +12,7 @@ interface HeaderProps {
 
 export function Header({ activeTab, onTabChange }: HeaderProps) {
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null)
+  const [exportStatus, setExportStatus] = useState<'idle' | 'loading' | 'success'>('idle')
   const queryClient = useQueryClient()
 
   const refreshMutation = useMutation({
@@ -22,6 +23,7 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
       queryClient.invalidateQueries({ queryKey: ['trending'] })
       queryClient.invalidateQueries({ queryKey: ['trend-stats'] })
       queryClient.invalidateQueries({ queryKey: ['genres'] })
+      queryClient.invalidateQueries({ queryKey: ['monetization-stats'] })
       setTimeout(() => setRefreshMessage(null), 3000)
     },
     onError: () => {
@@ -29,6 +31,17 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
       setTimeout(() => setRefreshMessage(null), 3000)
     }
   })
+
+  const handleExport = async () => {
+    setExportStatus('loading')
+    try {
+      await downloadZettaExport()
+      setExportStatus('success')
+      setTimeout(() => setExportStatus('idle'), 2000)
+    } catch {
+      setExportStatus('idle')
+    }
+  }
 
   return (
     <header className="glass-panel mx-4 mt-4 mb-6">
@@ -76,6 +89,12 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
               active={activeTab === 'analytics'}
               onClick={() => onTabChange('analytics')}
             />
+            <NavLink
+              icon={<DollarSign className="w-4 h-4" />}
+              label="Monetization"
+              active={activeTab === 'monetization'}
+              onClick={() => onTabChange('monetization')}
+            />
           </motion.nav>
 
           {/* Status & Refresh */}
@@ -90,6 +109,23 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
                 {refreshMessage}
               </span>
             )}
+            <button
+              onClick={handleExport}
+              disabled={exportStatus === 'loading'}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-aurora-gradient hover:opacity-90 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-sm"
+              title="Export data for Zetta game creator"
+            >
+              {exportStatus === 'loading' ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : exportStatus === 'success' ? (
+                <Check className="w-3.5 h-3.5" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              <span className="hidden sm:inline">
+                {exportStatus === 'success' ? 'Exported!' : 'Zetta Export'}
+              </span>
+            </button>
             <button
               onClick={() => refreshMutation.mutate()}
               disabled={refreshMutation.isPending}

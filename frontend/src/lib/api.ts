@@ -173,3 +173,170 @@ export interface RefreshResponse {
 export async function refreshData(): Promise<RefreshResponse> {
   return fetchApi<RefreshResponse>('/admin/refresh', { method: 'POST' })
 }
+
+// =============================================================================
+// Monetization Types & Functions
+// =============================================================================
+
+export interface MonetizationStats {
+  total_passes: number
+  games_with_passes: number
+  avg_price: number
+  price_range: {
+    min: number
+    max: number
+  }
+  price_tiers: {
+    budget: number
+    standard: number
+    premium: number
+    luxury: number
+    whale: number
+  }
+  pass_types: Array<{
+    type: string
+    count: number
+    avg_price: number
+  }>
+}
+
+export interface GamePassDetail {
+  id: number
+  name: string
+  price: number | null
+  pass_type: string | null
+  is_for_sale: boolean
+}
+
+export interface GameMonetization {
+  game_id: number
+  game_name: string
+  pass_count: number
+  total_value: number
+  avg_price: number
+  passes: GamePassDetail[]
+}
+
+/**
+ * Get monetization statistics
+ */
+export async function getMonetizationStats(): Promise<MonetizationStats> {
+  return fetchApi<MonetizationStats>('/monetization/stats')
+}
+
+/**
+ * Get monetization data for a specific game
+ */
+export async function getGameMonetization(gameId: number): Promise<GameMonetization> {
+  return fetchApi<GameMonetization>(`/monetization/game/${gameId}`)
+}
+
+/**
+ * Get top monetizing games
+ */
+export async function getTopMonetizingGames(limit = 10): Promise<GameMonetization[]> {
+  return fetchApi<GameMonetization[]>(`/monetization/top?limit=${limit}`)
+}
+
+// =============================================================================
+// Zetta Export Types & Functions
+// =============================================================================
+
+export interface ZettaExport {
+  schema_version: string
+  export_timestamp: string
+  data_freshness_hours: number
+  summary: {
+    total_games_tracked: number
+    total_concurrent_players: number
+    unique_genres: number
+    tier_distribution: Record<string, number>
+    market_concentration: {
+      top_5_share_percent: number
+      top_10_share_percent: number
+    }
+  }
+  games: Array<{
+    universe_id: number
+    name: string
+    creator: string | null
+    genre: string | null
+    metrics: {
+      current_players: number
+      total_visits: number
+      favorites: number
+    }
+    popularity_score: number
+    engagement_score: number
+    tier: string
+  }>
+  genres: Array<{
+    name: string
+    game_count: number
+    total_ccu: number
+    avg_ccu_per_game: number
+    market_share_percent: number
+    saturation_level: string
+    top_games: string[]
+  }>
+  monetization: {
+    total_passes_tracked: number
+    games_with_passes: number
+    avg_passes_per_game: number
+    overall_avg_price: number
+    price_tier_distribution: Record<string, number>
+    pass_type_popularity: Array<{ type: string; count: number; percent: number }>
+    genre_monetization: Array<{ genre: string; avg_price: number; pass_count: number }>
+    top_strategies: string[]
+  } | null
+  game_monetization: Array<{
+    game_id: number
+    game_name: string
+    strategy: {
+      pass_count: number
+      price_range: [number, number]
+      avg_price: number
+      total_potential_spend: number
+      pass_type_breakdown: Record<string, number>
+      pricing_tier: string
+    } | null
+    passes: Array<{ name: string; price: number; type: string }>
+  }>
+  opportunities: Array<{
+    opportunity_type: string
+    description: string
+    confidence: number
+    supporting_data: Record<string, unknown>
+    recommended_action: string
+  }>
+  recommendations: {
+    recommended_genres: string[]
+    genre_reasoning: Record<string, string>
+    successful_patterns: Record<string, unknown>
+    avoid_list: string[]
+    key_insights: string[]
+  }
+}
+
+/**
+ * Get full Zetta export
+ */
+export async function getZettaExport(): Promise<ZettaExport> {
+  return fetchApi<ZettaExport>('/export/zetta')
+}
+
+/**
+ * Download Zetta export as JSON file
+ */
+export async function downloadZettaExport(): Promise<void> {
+  const data = await getZettaExport()
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `bloxpulse-zetta-export-${new Date().toISOString().split('T')[0]}.json`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
