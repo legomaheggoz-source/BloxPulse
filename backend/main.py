@@ -161,6 +161,28 @@ async def collect_monetization_get():
         }
 
 
+# Debug: Test single game passes API
+@app.get("/api/v1/admin/debug-passes/{universe_id}", tags=["Admin"])
+async def debug_game_passes(universe_id: int):
+    """Debug: Fetch passes for a single game and show raw response."""
+    import httpx
+
+    url = f"https://apis.roblox.com/game-passes/v1/universes/{universe_id}/game-passes"
+    params = {"passView": "Full"}
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            response = await client.get(url, params=params)
+            return {
+                "status_code": response.status_code,
+                "url": str(response.url),
+                "raw_response": response.json() if response.status_code == 200 else response.text[:500],
+                "keys": list(response.json().keys()) if response.status_code == 200 else None,
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+
 # Refresh endpoint - triggers collection and returns status
 @app.post("/api/v1/admin/refresh", tags=["Admin"])
 async def refresh_data():
