@@ -225,7 +225,7 @@ export function Monetization() {
                 Pass Type Breakdown
               </h3>
               <div className="space-y-3">
-                {stats.pass_types.slice(0, 8).map((type, index) => (
+                {stats.pass_types.slice(0, 8).map((type) => (
                   <div
                     key={type.type}
                     className="flex items-center justify-between p-2 rounded-lg bg-aurora-light/50"
